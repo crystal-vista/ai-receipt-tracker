@@ -1,0 +1,8 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - 5434:5434
+    environment:
+      POSTGRES_DB: ai-finace-tracker
+      POSTGRES_HOST_AUTH_METHOD: trust

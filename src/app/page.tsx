@@ -1,101 +1,91 @@
-import Image from "next/image";
+"use client";
+import Head from "next/head";
+import { useState } from "react";
+import { classifyImage } from "./modules/imageProcessing";
+import { parsePredictions } from "./modules/parse";
+// import Data from "./data"
+
+import "./globals.css";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [predictions, setPredictions] = useState<string | null>(null);
+  const [scanned, setScanned] = useState<boolean>(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleAnalyzeClick = async () => {
+    // Get the file input element and assert its type
+    const fileInput = document.getElementById("image-upload") as HTMLInputElement;
+  
+    // Ensure the file input exists and has files
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      setPredictions("Please upload a receipt");
+      return;
+    }
+
+    setPredictions("Analyzing image...");
+
+    const imageFile = fileInput.files[0];
+
+    try {
+      const predictions = await classifyImage(imageFile);
+      setScanned(true);
+      setPredictions(predictions.content); // Assume `setPredictions` updates state
+    } catch (error) {
+      setScanned(false);
+      setPredictions(null);
+      console.error("Error analyzing the receipt:", error);
+    }
+  };
+
+  const handleSaveClick = async () => {
+    if(!scanned || !predictions){
+      setPredictions("Please analyze a receipt");
+      return;
+    }
+    
+    try {
+      const result = await parsePredictions(predictions);
+      alert(result.content); // Assume `setPredictions` updates state
+      setPredictions("Receipt saved!")
+      setScanned(false);
+    } catch (error) {
+      setPredictions("Error saving the receipt.");
+      console.error("Error saving the receipt:", error);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <Head>
+        <link rel="icon" href="/favicon.ico" />
+        <title>Receipt Tracker</title>
+      </Head>
+      <main className="main">
+        <h1 className="title">AI-powered Receipt Scanner</h1>
+        <p className="description">
+          Next.js • OpenAI API • PostgreSQL
+        </p>
+        <div id="input-area">
+        <label
+          htmlFor="image-upload"
+          className="button" >
+          Upload Image
+        </label>
+          <input type="file" className="hidden" id="image-upload" onChange={() => setPredictions("File uploaded")}/>
+          <button className="button" onClick={handleAnalyzeClick}>
+              Analyze Receipt
+          </button>
         </div>
+        <div className="output-area">
+        {predictions ? (
+          <pre>{predictions}</pre>  // Display the predictions if it's not null
+        ) : (
+          <p>You can upload a receipt! Accepted formats: jpeg, png</p>  // Message when no predictions
+        )}
+      </div>
+      <button className="button" onClick={handleSaveClick}>
+            Save Entry
+      </button>
+
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    </div> )
 }
