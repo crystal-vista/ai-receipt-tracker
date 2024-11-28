@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useState } from "react";
 import { classifyImage } from "./modules/imageProcessing";
 import { parsePredictions } from "./modules/parse";
-// import Data from "./data"
+import Data from "./data"
 
 import "./globals.css";
 
@@ -44,9 +44,10 @@ export default function Home() {
     
     try {
       const result = await parsePredictions(predictions);
-      alert(result.content); // Assume `setPredictions` updates state
+      alert(result);
       setPredictions("Receipt saved!")
       setScanned(false);
+
     } catch (error) {
       setPredictions("Error saving the receipt.");
       console.error("Error saving the receipt:", error);
@@ -85,7 +86,7 @@ export default function Home() {
       <button className="button" onClick={handleSaveClick}>
             Save Entry
       </button>
-
+        <Data />
       </main>
     </div> )
 }
